@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/poll")
-class PollApi(private val pollService: PollService, private val votingService: VotingService) {
+class PollApi(private val pollService: PollService, private val voteService: VoteService) {
 
     @PostMapping
     fun createPoll(@RequestBody command: CreatePollCommand) =
@@ -15,14 +15,13 @@ class PollApi(private val pollService: PollService, private val votingService: V
 
     @PostMapping("/vote")
     fun vote(@RequestBody command: VoteCommand): ResponseEntity<VoteResult> {
-        return when(val result = votingService.vote(command)) {
+        return when (val result = voteService.vote(command)) {
             SuccessfulVote -> ResponseEntity(result, HttpStatus.OK);
             else -> ResponseEntity(result, HttpStatus.BAD_REQUEST)
         }
     }
 
     @GetMapping
-    fun getPolls() =
-        ResponseEntity(pollService.getAllPolls(), HttpStatus.OK)
+    fun getPolls() = ResponseEntity(pollService.getAllPolls(), HttpStatus.OK)
 }
 

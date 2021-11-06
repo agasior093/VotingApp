@@ -1,13 +1,12 @@
 package com.devjam.votingserver.application.voting
 
-import com.devjam.votingserver.application.auth.User
+import com.devjam.votingserver.application.auth.UserEntity
 import com.devjam.votingserver.infrastructure.security.AuthenticationProvider
 import org.springframework.stereotype.Service
-import java.util.*
 import javax.transaction.Transactional
 
 @Service
-class VotingService(
+class VoteService(
     private val pollRepository: PollRepository,
     private val authenticationProvider: AuthenticationProvider
 ) {
@@ -18,14 +17,14 @@ class VotingService(
         return pollRepository.findById(command.pollId).map { doVote(it, command, user) }.orElseGet { PollNotFound() }
     }
 
-    private fun doVote(poll: Poll, command: VoteCommand, user: User): VoteResult {
-        if (poll.answers.flatMap { it.voters }.contains(user)) return UserAlreadyVoted()
-        return if (!poll.answers.map { it.id }.containsAll(command.answerIds)) AnswerNotFound()
+    private fun doVote(pollEntity: PollEntity, command: VoteCommand, userEntity: UserEntity): VoteResult {
+        if (pollEntity.answerEntities.flatMap { it.voters }.contains(userEntity)) return UserAlreadyVoted()
+        return if (!pollEntity.answerEntities.map { it.id }.containsAll(command.answerIds)) AnswerNotFound()
         else {
-            command.answerIds.map { id -> poll.answers.find { it.id == id } }.forEach {
-                it?.voters?.add(user)
+            command.answerIds.map { id -> pollEntity.answerEntities.find { it.id == id } }.forEach {
+                it?.voters?.add(userEntity)
             }
-            pollRepository.save(poll)
+            pollRepository.save(pollEntity)
             SuccessfulVote
         }
     }

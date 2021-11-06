@@ -1,6 +1,6 @@
 package com.devjam.votingserver.application.voting
 
-import com.devjam.votingserver.application.auth.User
+import com.devjam.votingserver.application.auth.UserEntity
 import com.devjam.votingserver.infrastructure.security.AuthenticationProvider
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.PagingAndSortingRepository
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 
 @Repository
-interface PollRepository : PagingAndSortingRepository<Poll, Long>
+interface PollRepository : PagingAndSortingRepository<PollEntity, Long>
 
 @Service
 class PollService(
@@ -16,36 +16,41 @@ class PollService(
     private val authenticationProvider: AuthenticationProvider
 ) {
 
-    fun createPoll(command: CreatePollCommand): PollDto {
-        val pollEntity = pollRepository.save(Poll(
+    fun createPoll(command: CreatePollCommand): Poll {
+        val pollEntity = pollRepository.save(PollEntity(
             question = command.question,
-            answers = command.answers.map { Answer(content = it) }
+            answerEntities = command.answers.map { AnswerEntity(content = it) }
         ))
-        return toDto(pollEntity, authenticationProvider.getPrincipal())
+        return Poll(
+            id = pollEntity.id,
+            question = pollEntity.question,
+            answers = pollEntity.answerEntities.map { answerWithoutResults(it) },
+            canUserVote = true
+        )
     }
 
-    fun getAllPolls(): List<PollDto> {
+    fun getAllPolls(): List<Poll> {
         val user = authenticationProvider.getPrincipal()
-        return pollRepository.findAll(Sort.by("createdAt").descending()).map { toDto(it, user) }
+        return pollRepository.findAll(Sort.by("createdAt").descending()).map { toPoll(it, user) }
     }
 
-    private fun toDto(poll: Poll, user: User) = PollDto(
-        id = poll.id,
-        question = poll.question,
-        answers = poll.answers.map {
-            AnswerDto(
-                id = it.id,
-                content = it.content,
-                voters = getVoters(poll, it, user)
-            )
-        }
-    )
-
-    private fun getVoters(poll: Poll, answer: Answer, user: User): List<String> {
-        return if (poll.answers.flatMap { it.voters }.contains(user))
-            answer.voters.map { voter -> voter.username }
-        else emptyList()
+    private fun toPoll(pollEntity: PollEntity, userEntity: UserEntity): Poll {
+        val userAlreadyVoted = pollEntity.answerEntities.flatMap { it.voters }.contains(userEntity)
+        return Poll(
+            id = pollEntity.id,
+            question = pollEntity.question,
+            answers = pollEntity.answerEntities.map {
+                if (userAlreadyVoted) answerWithResults(it) else answerWithoutResults(it)
+            },
+            canUserVote = !userAlreadyVoted
+        )
     }
+
+    private fun answerWithResults(answer: AnswerEntity) =
+        AnswerWithResults(id = answer.id, content = answer.content, voters = answer.voters.map { it.username })
+
+    private fun answerWithoutResults(answer: AnswerEntity) =
+        AnswerWithoutResults(id = answer.id, content = answer.content)
 }
 
 

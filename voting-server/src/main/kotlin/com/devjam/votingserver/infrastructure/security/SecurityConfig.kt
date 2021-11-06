@@ -1,6 +1,6 @@
 package com.devjam.votingserver.infrastructure.security
 
-import com.devjam.votingserver.application.auth.User
+import com.devjam.votingserver.application.auth.UserEntity
 import com.devjam.votingserver.application.auth.UserRepository
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -34,7 +34,7 @@ class SecurityConfig(private val jwtFilter: JwtFilter) : WebSecurityConfigurerAd
 
 @Component
 class AuthenticationProvider(private val userRepository: UserRepository) {
-    fun getPrincipal(): User {
+    fun getPrincipal(): UserEntity {
         val principal = SecurityContextHolder.getContext().authentication?.principal as String? ?: throw UnauthorizedAccessException()
         return userRepository.findByUsername(principal) ?: throw UnauthorizedAccessException()
     }

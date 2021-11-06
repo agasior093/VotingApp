@@ -6,9 +6,9 @@ import org.springframework.data.repository.CrudRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
-interface UserRepository : CrudRepository<User, Long> {
+interface UserRepository : CrudRepository<UserEntity, Long> {
     fun existsByUsername(username: String): Boolean
-    fun findByUsername(username: String): User?
+    fun findByUsername(username: String): UserEntity?
 }
 
 @Service
@@ -22,17 +22,17 @@ class AuthService(
         UsernameAlreadyExists(command.username) else registerNewUser(command)
 
     private fun registerNewUser(command: AuthCommand): AuthResult {
-        val user =
-            userRepository.save(User(username = command.username, password = passwordEncoder.encode(command.password)))
-        return successfulAuth(user)
+        val userEntity =
+            userRepository.save(UserEntity(username = command.username, password = passwordEncoder.encode(command.password)))
+        return successfulAuth(userEntity)
     }
 
     fun login(command: AuthCommand) =
         userRepository.findByUsername(command.username)?.let { validateCredentials(it, command) }
             ?: InvalidCredentials()
 
-    private fun validateCredentials(user: User, command: AuthCommand) =
-        if (passwordEncoder.matches(command.password, user.password)) successfulAuth(user) else InvalidCredentials()
+    private fun validateCredentials(userEntity: UserEntity, command: AuthCommand) =
+        if (passwordEncoder.matches(command.password, userEntity.password)) successfulAuth(userEntity) else InvalidCredentials()
 
-    private fun successfulAuth(user: User) = SuccessfulAuth(username = user.username, tokenProvider.generateToken(user.username))
+    private fun successfulAuth(userEntity: UserEntity) = SuccessfulAuth(username = userEntity.username, tokenProvider.generateToken(userEntity.username))
 }
