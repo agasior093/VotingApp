@@ -21,11 +21,10 @@ class PollService(
             question = command.question,
             answerEntities = command.answers.map { AnswerEntity(content = it) }
         ))
-        return Poll(
+        return PollWithoutResults(
             id = pollEntity.id,
             question = pollEntity.question,
-            answers = pollEntity.answerEntities.map { answerWithoutResults(it) },
-            canUserVote = true
+            answers = pollEntity.answerEntities.map { answerWithoutResults(it) }
         )
     }
 
@@ -36,13 +35,18 @@ class PollService(
 
     private fun toPoll(pollEntity: PollEntity, userEntity: UserEntity): Poll {
         val userAlreadyVoted = pollEntity.answerEntities.flatMap { it.voters }.contains(userEntity)
-        return Poll(
+        return if (userAlreadyVoted) PollWithResults(
             id = pollEntity.id,
             question = pollEntity.question,
             answers = pollEntity.answerEntities.map {
-                if (userAlreadyVoted) answerWithResults(it) else answerWithoutResults(it)
-            },
-            canUserVote = !userAlreadyVoted
+                answerWithResults(it)
+            }
+        ) else PollWithoutResults(
+            id = pollEntity.id,
+            question = pollEntity.question,
+            answers = pollEntity.answerEntities.map {
+                answerWithoutResults(it)
+            }
         )
     }
 

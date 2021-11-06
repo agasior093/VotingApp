@@ -17,7 +17,7 @@ class AuthApi(private val authService: AuthService) {
     @PostMapping("/register")
     fun register(@RequestBody command: AuthCommand) =
         when (val authResult = authService.register(command)) {
-            is SuccessfulAuth -> ResponseEntity(authResult, HttpStatus.OK)
+            is SuccessfulAuth -> ResponseEntity(authResult, HttpStatus.CREATED)
             else -> ResponseEntity(authResult, HttpStatus.UNAUTHORIZED)
         }
 

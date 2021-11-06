@@ -22,25 +22,32 @@ data class PollNotFound(val message: String = "Poll does not exist"): VoteResult
 data class AnswerNotFound(val message: String = "Answer does not exist"): VoteResult()
 object SuccessfulVote : VoteResult()
 
-data class Poll(
+sealed class Poll
+
+data class PollWithoutResults(
     val id: Long,
     val question: String,
-    val answers: List<Answer>,
-    val canUserVote: Boolean
-)
+    val answers: List<AnswerWithoutResults>,
+    val canUserVote: Boolean  = true
+): Poll()
 
-sealed class Answer
+data class PollWithResults(
+    val id: Long,
+    val question: String,
+    val answers: List<AnswerWithResults>,
+    val canUserVote: Boolean = false
+): Poll()
 
 data class AnswerWithoutResults(
     val id: Long,
     val content: String
-): Answer()
+)
 
 data class AnswerWithResults(
     val id: Long,
     val content: String,
     val voters: List<String>
-): Answer()
+)
 
 @Entity
 data class PollEntity(
@@ -51,7 +58,7 @@ data class PollEntity(
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
     @OneToMany
-    @Cascade(CascadeType.PERSIST)
+    @Cascade(CascadeType.ALL)
     val answerEntities: List<AnswerEntity> = emptyList()
 )
 

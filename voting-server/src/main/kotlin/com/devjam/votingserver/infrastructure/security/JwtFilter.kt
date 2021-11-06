@@ -19,8 +19,9 @@ class JwtFilter(private val tokenProvider: JwtTokenProvider) : Filter {
     override fun doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain) {
         val httpRequest = request as HttpServletRequest
         httpRequest.getHeader("Authorization")?.let {
-            if (tokenProvider.validate(it)) {
-                val username = tokenProvider.getUsername(it)
+            val token = it.replace("Bearer ", "")
+            if (tokenProvider.validate(token)) {
+                val username = tokenProvider.getUsername(token)
                 SecurityContextHolder.getContext().authentication = JwtAuthentication(username)
             }
         }
