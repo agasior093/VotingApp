@@ -6,11 +6,3 @@ spring:
     driverClassName: org.h2.Driver
   jpa:
     spring.jpa.database-platform: org.hibernate.dialect.H2Dialect
-
-  h2:
-    console.enabled: true
-logging:
-  level:
-    org:
-      hibernate:
-        type: trace
