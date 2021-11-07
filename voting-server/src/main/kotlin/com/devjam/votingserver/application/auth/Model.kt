@@ -25,7 +25,6 @@ class InvalidCredentials : AuthResult() {
     val message = "Provided credentials are invalid"
 }
 
-
 @Entity
 data class UserEntity(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

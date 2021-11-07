@@ -28,7 +28,7 @@ class PollService(
         )
     }
 
-    fun getAllPolls(): List<Poll> {
+    fun listPolls(): List<Poll> {
         val user = authenticationProvider.getPrincipal()
         return pollRepository.findAll(Sort.by("createdAt").descending()).map { toPoll(it, user) }
     }
